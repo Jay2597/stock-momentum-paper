@@ -1,0 +1,22 @@
+name: mark-to-market
+on:
+  schedule:
+    - cron: "30 11 * * 1,3,5"   # Mon/Wed/Fri 17:00 IST, after NSE close
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  mark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install yfinance
+      - run: python mark.py
+      - run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add results/nav.csv
+          git diff --cached --quiet || git commit -m "mark $(date -u +%F)"
+          git push
